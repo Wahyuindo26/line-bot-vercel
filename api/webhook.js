@@ -5,7 +5,6 @@ const client = new Client({
   channelSecret: process.env.CHANNEL_SECRET,
 });
 
-// Konfigurasi agar Vercel mem-parsing body JSON
 export const config = {
   api: {
     bodyParser: true,
