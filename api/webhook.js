@@ -36,6 +36,21 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
+  // ✅ Command 'mulai' (sambutan)
+  if (msg === 'mulai') {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: 
+        '🎉 Welcome to CHL Blackjack Table 🎴\n'+
+        'Let's Party and Game On\n'+
+
+        '🃏 Ketik gabung untuk ikut bermain\n'+
+        '🔄 Ketik batal untuk keluar dari meja\n'+
+
+        'May luck be on your side tonight. ♠️',
+    });
+  }
+
   // 🃏 Command 'gabung'
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
