@@ -34,6 +34,7 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
+  // 🔸 Sambutan: hanya jika meja kosong
   if (msg === 'mulai') {
     if (playerQueue.length > 0) {
       return client.replyMessage(event.replyToken, {
@@ -53,6 +54,7 @@ async function handleEvent(event) {
     });
   }
 
+  // 🔸 Bergabung
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -86,11 +88,30 @@ async function handleEvent(event) {
       playerQueue.map(uid => client.pushMessage(uid, startMessage))
     );
 
-    // 🔜 Logika permainan lanjut bisa ditambahkan di sini
-
+    // 🔜 Tambahkan logika permainan di sini
     return;
   }
 
+  // 🔸 Batal
+  if (msg === 'batal') {
+    const index = playerQueue.indexOf(userId);
+
+    if (index === -1) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'Kamu belum bergabung, tidak ada yang perlu dibatalkan 😅',
+      });
+    }
+
+    playerQueue.splice(index, 1);
+
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '✅ Kamu telah keluar dari meja Blackjack. Sampai jumpa lagi!',
+    });
+  }
+
+  // 🔸 Default fallback
   return client.replyMessage(event.replyToken, {
     type: 'text',
     text: 'Perintah tidak dikenal. Ketik "mulai" untuk mulai permainan 🎉',
