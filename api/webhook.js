@@ -13,8 +13,10 @@ const playerQueue = [];
 const gameHistory = [];
 let resetTimer = null;
 
-// 🚨 Ganti ini dengan LINE userId kamu
-const adminId = 'pavinendra'; 
+// 👤 Daftar admin
+const admins = {
+  pavinendra: 'pavinendra', // User ID
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -39,7 +41,6 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
-  // 🛑 Reset otomatis jika game sudah jalan 2 menit
   const resetGame = () => {
     console.log('⌛ Auto-reset: Meja dikosongkan');
     playerQueue.length = 0;
@@ -89,12 +90,24 @@ async function handleEvent(event) {
       });
     }
 
-    // ⏱️ Atur reset otomatis 2 menit
     if (!resetTimer) {
       resetTimer = setTimeout(resetGame, 2 * 60 * 1000);
     }
 
-    // 🎮 Game dimulai
+    // Ambil nama pemain dari LINE profile
+    const [profile1, profile2] = await Promise.all([
+      client.getProfile(playerQueue[0]),
+      client.getProfile(playerQueue[1]),
+    ]);
+
+    gameHistory.push({
+      players: [
+        { id: playerQueue[0], name: profile1.displayName },
+        { id: playerQueue[1], name: profile2.displayName },
+      ],
+      timestamp: new Date().toISOString(),
+    });
+
     const startMessage = {
       type: 'text',
       text: '🎮 Permainan dimulai! Siapkan strategi dan keberuntunganmu.',
@@ -103,12 +116,6 @@ async function handleEvent(event) {
     await Promise.all(
       playerQueue.map(uid => client.pushMessage(uid, startMessage))
     );
-
-    // 📜 Simpan riwayat
-    gameHistory.push({
-      players: [...playerQueue],
-      timestamp: new Date().toISOString(),
-    });
 
     return;
   }
@@ -125,7 +132,6 @@ async function handleEvent(event) {
 
     playerQueue.splice(index, 1);
 
-    // Jika semua keluar, reset timer juga
     if (playerQueue.length === 0 && resetTimer) {
       clearTimeout(resetTimer);
       resetTimer = null;
@@ -138,7 +144,7 @@ async function handleEvent(event) {
   }
 
   if (msg === 'reset-riwayat') {
-    if (userId !== adminId) {
+    if (userId !== admins.pavinendra) {
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text: '❌ Kamu tidak diizinkan mereset riwayat.',
@@ -149,7 +155,7 @@ async function handleEvent(event) {
 
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: '✅ Riwayat permainan berhasil di-reset oleh admin.',
+      text: '✅ Riwayat permainan berhasil di-reset oleh admin (Pavinendra).',
     });
   }
 
@@ -162,7 +168,9 @@ async function handleEvent(event) {
     }
 
     const latest = gameHistory[gameHistory.length - 1];
-    const players = latest.players.map((p, i) => `Pemain ${i + 1}: ${p}`).join('\n');
+    const players = latest.players.map(
+      (p, i) => `Pemain ${i + 1}: ${p.name}`
+    ).join('\n');
 
     return client.replyMessage(event.replyToken, {
       type: 'text',
