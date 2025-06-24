@@ -136,7 +136,6 @@ export default async function handler(req, res) {
 }
 
 
-
 async function handleEvent(event) {
 
  try {
@@ -144,6 +143,8 @@ async function handleEvent(event) {
 
     const msg = event.message.text.trim().toLowerCase();
     const userId = event.source.userId;
+    const groupId = event.source.type === 'group' ? event.source.groupId : null;
+
   
     console.log(`[MSG] ${userId}: ${msg}`);
   
@@ -199,16 +200,7 @@ async function handleEvent(event) {
         client.pushMessage(p2, { type: 'text', text: '🎮 Permainan dimulai!' }),
       ]);
   
-      currentTurn = p1;
-      await client.pushMessage(p1, {
-        type: 'text',
-        text: '🎯 Giliranmu sekarang! Ketik "hit" atau "stand".'
-      });
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '🃏 Permainan dimulai! Giliran pertama telah dipanggil.',
-      });
-      
+            
   
       if (!resetTimer) {
         resetTimer = setTimeout(() => {
@@ -222,13 +214,6 @@ async function handleEvent(event) {
       return;
     }
   
-    if (playerQueue.length === 2) {
-      globalThis.currentDeck = shuffleDeck(fullDeck);
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '🃏 Meja lengkap! Deck telah dikocok.',
-      });    
-    }
   
     if (msg === 'batal') {
       const index = playerQueue.indexOf(userId);
@@ -408,18 +393,32 @@ async function handleEvent(event) {
  catch (err) {
     console.error('[ERROR in handleEvent]', err);
  }
+ await mulaiGiliranPertama(groupId);
 
-  if (playerQueue.length === 2 && globalThis.currentDeck && !currentTurn) {
-  currentTurn = playerQueue[0];
-  await client.pushMessage(currentTurn, {
-    type: 'text',
-    text: '🎯 Giliranmu sekarang! Ketik "hit" atau "stand".'
-  });
-
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: '🕹️ Permainan aktif! Giliran pertama dimulai.',
-  });
-}
 
 } // 🔚 Tutup fungsi handleEvent
+
+async function mulaiGiliranPertama(groupId) {
+    if (playerQueue.length === 2 && !globalThis.currentDeck && !currentTurn) {
+      globalThis.currentDeck = shuffleDeck(fullDeck);
+      currentTurn = playerQueue[0];
+  
+      const profile = await client.getProfile(currentTurn);
+      
+      if (groupId) {
+        await client.pushMessage(groupId, {
+          type: 'text',
+          text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "hit" atau "stand".`
+        });
+      } else {
+        // fallback jika bukan dari grup
+        await Promise.all(playerQueue.map(uid =>
+          client.pushMessage(uid, {
+            type: 'text',
+            text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "hit" atau "stand".`
+          })
+        ));
+      }
+    }
+  }
+  
