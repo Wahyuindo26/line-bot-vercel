@@ -283,15 +283,7 @@ if (msg === 'mulai') {
       text: '✅ Riwayat telah direset oleh admin.'
     });
   }
-
-  // === DEFAULT ===
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: 'Perintah tidak dikenal. Ketik "mulai", "gabung", "hit", atau "stand".'
-  });
-}
-
-  // === HIT ===
+// === HIT ===
   if (msg === 'hit') {
     if (!playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -383,6 +375,13 @@ if (msg === 'mulai') {
 
       return;
     }
+  // === DEFAULT ===
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: 'Perintah tidak dikenal. Ketik "mulai", "gabung", "hit", atau "stand".'
+  });
+}
+
 
     // Pindah giliran ke lawan
     currentTurn = lawan;
