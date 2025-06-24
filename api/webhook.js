@@ -26,10 +26,6 @@ export default async function handler(req, res) {
     const results = await Promise.all(
       events.map((event) => {
         if (event.type !== 'message' || event.message.type !== 'text') return;
-        return client.replyMessage(event.replyToken, {
-          type: 'text',
-          text: `Kamu bilang: "${event.message.text}"`,
-        });
       })
     );
     return res.status(200).json(results);
