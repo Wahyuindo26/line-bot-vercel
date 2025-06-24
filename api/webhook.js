@@ -1,15 +1,15 @@
 import { Client } from '@line/bot-sdk';
 
-// Buat instance client LINE
 const client = new Client({
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
 });
 
+// Konfigurasi agar Vercel mem-parsing body JSON
 export const config = {
   api: {
-    bodyParser: true // Pastikan body diparse sebagai JSON
-  }
+    bodyParser: true,
+  },
 };
 
 export default async function handler(req, res) {
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const results = await Promise.all(
-      events.map(event => {
+      events.map((event) => {
         if (event.type !== 'message' || event.message.type !== 'text') return;
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -33,7 +33,6 @@ export default async function handler(req, res) {
         });
       })
     );
-
     return res.status(200).json(results);
   } catch (error) {
     console.error('LINE reply failed:', error);
