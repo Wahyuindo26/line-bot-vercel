@@ -70,7 +70,7 @@ await client.pushMessage(userId, {
           action: {
             type: 'uri',
             label: 'Tambah Sekarang',
-            uri: 'https://line.me/R/ti/p/@your_bot_id' // Ganti dengan ID bot kamu
+            uri: 'https://line.me/R/ti/p/@552qvten' // Ganti dengan ID bot kamu
           },
           style: 'primary',
           color: '#00B900'
