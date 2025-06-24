@@ -6,55 +6,90 @@ const client = new Client({
 });
 
 export const config = {
-  api: {
-    bodyParser: true,
-  },
+  api: { bodyParser: true },
 };
 
+// 🧠 Variabel penyimpanan sementara pemain
+const playerQueue = [];
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const events = req.body?.events;
-
   if (!events || !Array.isArray(events)) {
     return res.status(400).json({ error: 'Invalid event format' });
   }
 
   try {
-    const results = await Promise.all(
-      events.map((event) => {
-        if (event.type !== 'message' || event.message.type !== 'text') return;
-      })
-    );
+    const results = await Promise.all(events.map(handleEvent));
     return res.status(200).json(results);
   } catch (error) {
-    console.error('LINE reply failed:', error);
+    console.error('Webhook error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-// 💬 Di sini kamu bisa tambah logika command seperti 'mulai'
+
+// 🎮 Handler pesan masuk
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
 
   const msg = event.message.text.trim().toLowerCase();
+  const userId = event.source.userId;
 
+  // ✅ Command 'mulai' (sambutan)
   if (msg === 'mulai') {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text:
-        '🎉 Selamat datang di meja Blackjack LINE!\n' +
-        'Di sini, keberuntungan dan strategi diuji.\n\n' +
-        '🃏 Ketik "gabung" untuk ikut bermain\n' +
-        '🔄 Ketik "batal" untuk keluar dari meja\n\n' +
-        'Selamat bersenang-senang — giliranmu akan tiba!',
+        '🌌 Selamat datang, Penjelajah Keberuntungan!\n' +
+        'Ketik "gabung" untuk duduk di meja Blackjack.\n' +
+        'Minimal 2 pemain untuk memulai 🎴',
     });
   }
 
-  // Default echo
+  // 🃏 Command 'gabung'
+  if (msg === 'gabung') {
+    if (playerQueue.includes(userId)) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'Kamu sudah bergabung. Tunggu pemain lainnya...',
+      });
+    }
+
+    playerQueue.push(userId);
+
+    if (playerQueue.length < 2) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '🃏 Kamu pemain pertama. Tunggu satu pemain lagi untuk memulai.',
+      });
+    }
+
+    if (playerQueue.length === 2) {
+      const startMessage = {
+        type: 'text',
+        text: '🎮 Permainan dimulai! Siapkan strategi dan keberuntunganmu.',
+      };
+
+      await Promise.all(
+        playerQueue.map(uid => client.pushMessage(uid, startMessage))
+      );
+
+      // 💡 Lanjut ke pembagian kartu nanti di sini
+
+      return;
+    }
+
+    // Lebih dari 2 pemain
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: 'Maaf, meja penuh. Tunggu ronde berikutnya 🙏',
+    });
+  }
+
+  // ✉️ Default (pesan yang tidak dikenali)
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: `Kamu bilang: "${event.message.text}"`,
+    text: 'Perintah tidak dikenal. Ketik "mulai" untuk melihat opsi.',
   });
 }
