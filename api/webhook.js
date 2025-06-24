@@ -1,4 +1,3 @@
-// === Bagian 1: Setup & Flex Tambah Teman ===
 import { Client } from '@line/bot-sdk';
 
 const client = new Client({
@@ -10,24 +9,19 @@ export const config = {
   api: { bodyParser: true },
 };
 
-const admins = {
-  pavinendra: 'pavinendra', // Ganti sesuai ID asli
-};
-
+const admins = { pavinendra: 'pavinendra' };
 const playerQueue = [];
 const playerCards = {};
 const playerStatus = {};
 const gameHistory = [];
-
 let currentTurn = null;
 let resetTimer = null;
 
-// TODO: Isi sesuai deck kamu
 const fullDeck = [
-  '🂡', '🂢', '🂣', '🂤', '🂥', '🂦', '🂧', '🂨', '🂩', '🂪', '🂫', '🂭', '🂮',
-  '🃁', '🃂', '🃃', '🃄', '🃅', '🃆', '🃇', '🃈', '🃉', '🃊', '🃋', '🃍', '🃎',
-  '🃑', '🃒', '🃓', '🃔', '🃕', '🃖', '🃗', '🃘', '🃙', '🃚', '🃛', '🃝', '🃞',
-  '🂱', '🂲', '🂳', '🂴', '🂵', '🂶', '🂷', '🂸', '🂹', '🂺', '🂻', '🂽', '🂾'
+  '🂡','🂢','🂣','🂤','🂥','🂦','🂧','🂨','🂩','🂪','🂫','🂭','🂮',
+  '🃁','🃂','🃃','🃄','🃅','🃆','🃇','🃈','🃉','🃊','🃋','🃍','🃎',
+  '🃑','🃒','🃓','🃔','🃕','🃖','🃗','🃘','🃙','🃚','🃛','🃝','🃞',
+  '🂱','🂲','🂳','🂴','🂵','🂶','🂷','🂸','🂹','🂺','🂻','🂽','🂾'
 ];
 
 function hitungNilai(cards) {
@@ -51,7 +45,7 @@ function hitungNilai(cards) {
 }
 
 function buatFlexHasil(p1, p2, nama1, nama2) {
-  const hasil = {
+  return {
     type: 'flex',
     altText: 'Hasil Permainan',
     contents: {
@@ -59,38 +53,20 @@ function buatFlexHasil(p1, p2, nama1, nama2) {
       header: {
         type: 'box',
         layout: 'vertical',
-        contents: [{
-          type: 'text',
-          text: '🎉 Hasil Permainan',
-          weight: 'bold',
-          size: 'xl'
-        }]
+        contents: [{ type: 'text', text: '🎉 Hasil Permainan', weight: 'bold', size: 'xl' }]
       },
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
-          {
-            type: 'text',
-            text: `${nama1} vs ${nama2}`,
-            wrap: true,
-            weight: 'bold',
-            size: 'md'
-          },
-          {
-            type: 'text',
-            text: 'Pemenang: TBD',
-            wrap: true,
-            size: 'sm'
-          }
+          { type: 'text', text: `${nama1} vs ${nama2}`, wrap: true, weight: 'bold', size: 'md' },
+          { type: 'text', text: 'Pemenang: TBD', wrap: true, size: 'sm' }
         ]
       }
     }
   };
-  return hasil;
 }
 
-// ✅ Tambahkan fungsi aman ini:
 async function ajakTambahTeman(userId) {
   return client.pushMessage(userId, {
     type: 'flex',
@@ -113,7 +89,7 @@ async function ajakTambahTeman(userId) {
             action: {
               type: 'uri',
               label: 'Tambah Sekarang',
-              uri: 'https://line.me/R/ti/p/@552qvten' // Ganti ke ID bot kamu
+              uri: 'https://line.me/R/ti/p/@552qvten'
             },
             style: 'primary',
             color: '#00B900'
@@ -123,10 +99,14 @@ async function ajakTambahTeman(userId) {
     }
   });
 }
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
   const events = req.body?.events;
-  if (!events || !Array.isArray(events)) return res.status(400).json({ error: 'Invalid format' });
+  if (!Array.isArray(events)) {
+    return res.status(400).json({ error: 'Invalid format' });
+  }
 
   try {
     const results = await Promise.all(events.map(handleEvent));
@@ -143,30 +123,27 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
-  // 💡 Tambahkan log ini saat debug
   console.log(`[MSG] ${userId}: ${msg}`);
 
-if (msg === 'mulai') {
-  if (playerQueue.length > 0) {
+  if (msg === 'mulai') {
+    if (playerQueue.length > 0) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'Permainan sedang berlangsung. Tunggu ronde selanjutnya!',
+      });
+    }
+
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: 'Permainan sedang berlangsung. Tunggu ronde selanjutnya!'
+      text:
+        '🎉 Welcome to CHL Blackjack Table\n' +
+        "Let's Party and Game On\n\n" +
+        'ⓘ Ketik .htp untuk cara bermain\n' +
+        '🃏 Ketik gabung untuk ikut bermain\n' +
+        '🔄 Ketik batal untuk keluar dari meja\n\n' +
+        'May luck be on your side tonight. ♠',
     });
   }
-
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text:
-      '🎉 Welcome to CHL Blackjack Table\n' +
-      "Let's Party and Game On\n\n" +
-      'ⓘ Ketik .htp untuk cara bermain\n' +
-      '🃏 Ketik gabung untuk ikut bermain\n' +
-      '🔄 Ketik batal untuk keluar dari meja\n\n' +
-      'May luck be on your side tonight. ♠'
-  });
-}
-
-// === GABUNG ===
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, { type: 'text', text: 'Kamu sudah bergabung!' });
@@ -188,7 +165,10 @@ if (msg === 'mulai') {
     const profile1 = await client.getProfile(p1);
     const profile2 = await client.getProfile(p2);
     gameHistory.push({
-      players: [{ id: p1, name: profile1.displayName }, { id: p2, name: profile2.displayName }],
+      players: [
+        { id: p1, name: profile1.displayName },
+        { id: p2, name: profile2.displayName }
+      ],
       timestamp: new Date().toISOString(),
     });
 
@@ -215,7 +195,6 @@ if (msg === 'mulai') {
     return;
   }
 
-  // === BATAL ===
   if (msg === 'batal') {
     const index = playerQueue.indexOf(userId);
     if (index !== -1) {
@@ -230,7 +209,6 @@ if (msg === 'mulai') {
     });
   }
 
-  // === .HTP ===
   if (msg === '.htp') {
     return client.replyMessage(event.replyToken, {
       type: 'text',
@@ -249,7 +227,6 @@ if (msg === 'mulai') {
     });
   }
 
-  // === RIWAYAT ===
   if (msg === 'riwayat') {
     if (gameHistory.length === 0) {
       return client.replyMessage(event.replyToken, {
@@ -268,7 +245,6 @@ if (msg === 'mulai') {
     });
   }
 
-  // === RESET RIWAYAT ===
   if (msg === 'reset-riwayat') {
     if (userId !== admins.pavinendra) {
       return client.replyMessage(event.replyToken, {
@@ -283,7 +259,6 @@ if (msg === 'mulai') {
       text: '✅ Riwayat telah direset oleh admin.'
     });
   }
-// === HIT ===
   if (msg === 'hit') {
     if (!playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -336,7 +311,6 @@ if (msg === 'mulai') {
     });
   }
 
-  // === STAND ===
   if (msg === 'stand') {
     if (!playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -375,15 +349,7 @@ if (msg === 'mulai') {
 
       return;
     }
-  // === DEFAULT ===
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: 'Perintah tidak dikenal. Ketik "mulai", "gabung", "hit", atau "stand".'
-  });
-}
 
-
-    // Pindah giliran ke lawan
     currentTurn = lawan;
     await client.pushMessage(lawan, {
       type: 'text',
@@ -395,3 +361,10 @@ if (msg === 'mulai') {
       text: '✅ Kamu memilih "stand". Giliran berpindah.'
     });
   }
+
+  // === DEFAULT FALLBACK ===
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: 'Perintah tidak dikenal. Ketik "mulai", "gabung", "hit", atau "stand".'
+  });
+} // 🔚 Tutup fungsi handleEvent
