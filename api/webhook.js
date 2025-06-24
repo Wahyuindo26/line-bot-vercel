@@ -36,17 +36,6 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
-  // ✅ Command 'mulai' (sambutan)
-  if (msg === 'mulai') {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text:
-        '🌌 Selamat datang, Penjelajah Keberuntungan!\n' +
-        'Ketik "gabung" untuk duduk di meja Blackjack.\n' +
-        'Minimal 2 pemain untuk memulai 🎴',
-    });
-  }
-
   // 🃏 Command 'gabung'
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
