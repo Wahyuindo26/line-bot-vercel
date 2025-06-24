@@ -17,32 +17,48 @@ const gameHistory = [];
 let currentTurn = null;
 let resetTimer = null;
 
-const fullDeck = [
-  '🂡','🂢','🂣','🂤','🂥','🂦','🂧','🂨','🂩','🂪','🂫','🂭','🂮',
-  '🃁','🃂','🃃','🃄','🃅','🃆','🃇','🃈','🃉','🃊','🃋','🃍','🃎',
-  '🃑','🃒','🃓','🃔','🃕','🃖','🃗','🃘','🃙','🃚','🃛','🃝','🃞',
-  '🂱','🂲','🂳','🂴','🂵','🂶','🂷','🂸','🂹','🂺','🂻','🂽','🂾'
-];
+const suits = ['♠️', '♥️', '♣️', '♦️'];
+const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const fullDeck = [];
+
+for (const suit of suits) {
+  for (const value of values) {
+    fullDeck.push(`${value}${suit}`);
+  }
+}
+
+function shuffleDeck(deck) {
+    const shuffled = [...deck];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
 
 function hitungNilai(cards) {
-  let total = 0;
-  let aceCount = 0;
-  for (const card of cards) {
-    if (card.startsWith('🂡') || card.startsWith('🃁') || card.startsWith('🃑') || card.startsWith('🂱')) {
-      total += 11;
-      aceCount++;
-    } else if (/[🂢-🂾🃂-🃞🂲-🂾]/.test(card)) {
-      total += 10;
-    } else {
-      total += parseInt(card.slice(1), 10);
+    let total = 0;
+    let aceCount = 0;
+    for (const card of cards) {
+      const value = card.slice(0, card.length - 2); // 'A', '10', 'K', dsb
+  
+      if (value === 'A') {
+        total += 11;
+        aceCount++;
+      } else if (['J', 'Q', 'K'].includes(value)) {
+        total += 10;
+      } else {
+        total += parseInt(value, 10);
+      }
     }
+  
+    while (total > 21 && aceCount > 0) {
+      total -= 10;
+      aceCount--;
+    }
+  
+    return total;
   }
-  while (total > 21 && aceCount > 0) {
-    total -= 10;
-    aceCount--;
-  }
-  return total;
-}
 
 function buatFlexHasil(p1, p2, nama1, nama2) {
   return {
@@ -117,6 +133,7 @@ export default async function handler(req, res) {
   }
 }
 
+console.log('[DEBUG] Webhook triggered:', JSON.stringify(req.body));
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
 
@@ -193,6 +210,10 @@ async function handleEvent(event) {
     }
 
     return;
+  }
+
+  if (playerQueue.length === 2) {
+    globalThis.currentDeck = shuffleDeck(fullDeck);
   }
 
   if (msg === 'batal') {
@@ -274,14 +295,14 @@ async function handleEvent(event) {
       });
     }
 
-    const card = fullDeck[Math.floor(Math.random() * fullDeck.length)];
+    const card = globalThis.currentDeck?.shift() || '🃏'; // fallback jika deck kosong
     playerCards[userId].push(card);
     const total = hitungNilai(playerCards[userId]);
     const kartu = playerCards[userId].join(' ');
 
     await client.pushMessage(userId, {
       type: 'text',
-      text: `🂠 Kamu mendapat kartu: ${card}\n🧮 Totalmu: ${total}\n🃏 Kartu: ${kartu}`
+      text: `🃏 Kamu mendapat kartu: ${card}\n🧮 Totalmu: ${total}\n📦 Kartu kamu: ${kartu}`
     });
 
     if (total > 21) {
