@@ -10,6 +10,11 @@ export const config = {
 };
 
 const playerQueue = [];
+const gameHistory = [];
+let resetTimer = null;
+
+// 🚨 Ganti ini dengan LINE userId kamu
+const adminId = 'Uxxxxxxxxxxxxxxxxxxxxxxxxxx'; 
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -34,7 +39,13 @@ async function handleEvent(event) {
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
-  // 🔸 Sambutan: hanya jika meja kosong
+  // 🛑 Reset otomatis jika game sudah jalan 2 menit
+  const resetGame = () => {
+    console.log('⌛ Auto-reset: Meja dikosongkan');
+    playerQueue.length = 0;
+    resetTimer = null;
+  };
+
   if (msg === 'mulai') {
     if (playerQueue.length > 0) {
       return client.replyMessage(event.replyToken, {
@@ -54,7 +65,6 @@ async function handleEvent(event) {
     });
   }
 
-  // 🔸 Bergabung
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -79,6 +89,12 @@ async function handleEvent(event) {
       });
     }
 
+    // ⏱️ Atur reset otomatis 2 menit
+    if (!resetTimer) {
+      resetTimer = setTimeout(resetGame, 2 * 60 * 1000);
+    }
+
+    // 🎮 Game dimulai
     const startMessage = {
       type: 'text',
       text: '🎮 Permainan dimulai! Siapkan strategi dan keberuntunganmu.',
@@ -88,11 +104,15 @@ async function handleEvent(event) {
       playerQueue.map(uid => client.pushMessage(uid, startMessage))
     );
 
-    // 🔜 Tambahkan logika permainan di sini
+    // 📜 Simpan riwayat
+    gameHistory.push({
+      players: [...playerQueue],
+      timestamp: new Date().toISOString(),
+    });
+
     return;
   }
 
-  // 🔸 Batal
   if (msg === 'batal') {
     const index = playerQueue.indexOf(userId);
 
@@ -105,13 +125,51 @@ async function handleEvent(event) {
 
     playerQueue.splice(index, 1);
 
+    // Jika semua keluar, reset timer juga
+    if (playerQueue.length === 0 && resetTimer) {
+      clearTimeout(resetTimer);
+      resetTimer = null;
+    }
+
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: '✅ Kamu telah keluar dari meja Blackjack. Sampai jumpa lagi!',
     });
   }
 
-  // 🔸 Default fallback
+  if (msg === 'reset-riwayat') {
+    if (userId !== adminId) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '❌ Kamu tidak diizinkan mereset riwayat.',
+      });
+    }
+
+    gameHistory.length = 0;
+
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '✅ Riwayat permainan berhasil di-reset oleh admin.',
+    });
+  }
+
+  if (msg === 'riwayat') {
+    if (gameHistory.length === 0) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '📭 Belum ada riwayat permainan saat ini.',
+      });
+    }
+
+    const latest = gameHistory[gameHistory.length - 1];
+    const players = latest.players.map((p, i) => `Pemain ${i + 1}: ${p}`).join('\n');
+
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `📜 Riwayat Terakhir:\n${players}\nTanggal: ${latest.timestamp}`,
+    });
+  }
+
   return client.replyMessage(event.replyToken, {
     type: 'text',
     text: 'Perintah tidak dikenal. Ketik "mulai" untuk mulai permainan 🎉',
