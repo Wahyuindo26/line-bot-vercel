@@ -203,6 +203,11 @@ async function handleEvent(event) {
         type: 'text',
         text: '🎯 Giliranmu sekarang! Ketik "hit" atau "stand".'
       });
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '🃏 Permainan dimulai! Giliran pertama telah dipanggil.',
+      });
+      
   
       if (!resetTimer) {
         resetTimer = setTimeout(() => {
@@ -218,6 +223,10 @@ async function handleEvent(event) {
   
     if (playerQueue.length === 2) {
       globalThis.currentDeck = shuffleDeck(fullDeck);
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '🃏 Meja lengkap! Deck telah dikocok.',
+      });    
     }
   
     if (msg === 'batal') {
@@ -321,7 +330,7 @@ async function handleEvent(event) {
         await Promise.all([
           client.pushMessage(p1, hasilFlex),
           client.pushMessage(p2, hasilFlex),
-        ]);
+        ]);         
   
         playerQueue.length = 0;
         currentTurn = null;
