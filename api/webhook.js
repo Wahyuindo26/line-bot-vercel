@@ -11,21 +11,44 @@ export const config = {
 
 const playerQueue = [];
 const gameHistory = [];
-const playerCards = {}; // userId: [array kartu]
+const playerCards = {};
+const playerStatus = {};
 let currentTurn = null;
 let resetTimer = null;
 
-// Kumpulan kartu sederhana (simbol)
 const fullDeck = [
   '🂡', '🂢', '🂣', '🂤', '🂥', '🂦', '🂧', '🂨', '🂩', '🂪', '🂫', '🂬', '🂭',
   '🂱', '🂲', '🂳', '🂴', '🂵', '🂶', '🂷', '🂸', '🂹', '🂺', '🂻', '🂼', '🂽',
   '🃁', '🃂', '🃃', '🃄', '🃅', '🃆', '🃇', '🃈', '🃉', '🃊', '🃋', '🃌', '🃍'
 ];
 
-// 👤 LINE userId admin
+// Ganti dengan LINE userId milik Pavinendra
 const admins = {
-  pavinendra: 'pavinendra' // Ganti dengan ID asli
+  pavinendra: 'Uabc123pavin456xyz',
 };
+
+function hitungNilai(cards) {
+  let total = 0;
+  let aces = 0;
+
+  for (const card of cards) {
+    const value = card.replace(/[^\dAJQK]/gi, '');
+    if (['J', 'Q', 'K'].includes(value)) total += 10;
+    else if (value === 'A') {
+      aces++;
+      total += 11;
+    } else {
+      total += parseInt(value) || 0;
+    }
+  }
+
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces--;
+  }
+
+  return total;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -43,7 +66,6 @@ export default async function handler(req, res) {
 
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
-
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
@@ -51,7 +73,8 @@ async function handleEvent(event) {
     playerQueue.length = 0;
     currentTurn = null;
     resetTimer = null;
-    Object.keys(playerCards).forEach(key => delete playerCards[key]);
+    Object.keys(playerCards).forEach(k => delete playerCards[k]);
+    Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
   };
 
   if (msg === 'mulai') {
@@ -112,6 +135,8 @@ async function handleEvent(event) {
 
     playerCards[playerQueue[0]] = [];
     playerCards[playerQueue[1]] = [];
+    playerStatus[playerQueue[0]] = 'playing';
+    playerStatus[playerQueue[1]] = 'playing';
 
     const startMessage = {
       type: 'text',
@@ -141,6 +166,7 @@ async function handleEvent(event) {
 
     playerQueue.splice(index, 1);
     delete playerCards[userId];
+    delete playerStatus[userId];
     if (playerQueue.length === 0 && resetTimer) {
       clearTimeout(resetTimer);
       resetTimer = null;
@@ -153,89 +179,52 @@ async function handleEvent(event) {
     });
   }
 
-  if (msg === 'stand') {
-    if (!playerQueue.includes(userId)) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '🚫 Kamu belum bergabung dalam permainan.',
-      });
-    }
-
-    if (userId !== currentTurn) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '⏳ Ini bukan giliranmu. Tunggu lawanmu selesai.',
-      });
-    }
-
-    const nextPlayer = playerQueue.find(uid => uid !== userId);
-    currentTurn = nextPlayer;
-
-    await client.pushMessage(nextPlayer, {
-      type: 'text',
-      text: '🎯 Sekarang giliranmu! Ketik "hit" untuk ambil kartu atau "stand" jika cukup.',
-    });
-
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '✅ Kamu memilih "stand". Giliran berpindah ke pemain berikutnya.',
-    });
-  }
-
   if (msg === 'hit') {
-    if (!playerQueue.includes(userId)) {
+    if (!playerQueue.includes(userId))
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text: '🚫 Kamu belum bergabung dalam permainan.',
       });
-    }
 
-    if (userId !== currentTurn) {
+    if (userId !== currentTurn)
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text: '⏳ Ini bukan giliranmu. Tunggu giliranmu ya!',
       });
-    }
-
-    if (!playerCards[userId]) playerCards[userId] = [];
 
     const card = fullDeck[Math.floor(Math.random() * fullDeck.length)];
     playerCards[userId].push(card);
 
+    const total = hitungNilai(playerCards[userId]);
+    const kartu = playerCards[userId].join(' ');
+
     await client.pushMessage(userId, {
       type: 'text',
-      text: `🂠 Kamu mendapat kartu: ${card}\nKartu kamu: ${playerCards[userId].join(' ')}`,
+      text: `🂠 Kamu mendapat kartu: ${card}\n🧮 Totalmu: ${total}\n🃏 Kartu kamu: ${kartu}`,
     });
+
+    if (total > 21) {
+      playerStatus[userId] = 'bust';
+
+      await client.pushMessage(userId, { type: 'text', text: `💥 Kamu bust! Poinmu melebihi 21.` });
+
+      const other = playerQueue.find(uid => uid !== userId);
+      await client.pushMessage(other, { type: 'text', text: `🎉 Lawan kamu bust! Kamu menang otomatis.` });
+
+      resetGame();
+    }
 
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: '🎴 Kartu telah diberikan. Kamu bisa "hit" lagi atau "stand".',
+      text: '🎴 Kartu diberikan. Kamu bisa "hit" lagi atau "stand".',
     });
   }
 
-  if (msg === 'reset-riwayat') {
-    if (userId !== admins.pavinendra) {
+  if (msg === 'stand') {
+    if (!playerQueue.includes(userId))
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: '❌ Kamu tidak diizinkan mereset riwayat.',
+        text: '🚫 Kamu belum bergabung dalam permainan.',
       });
-    }
 
-    gameHistory.length = 0;
-
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '✅ Riwayat permainan berhasil di-reset oleh admin (Pavinendra).',
-    });
-  }
-
-  if (msg === 'riwayat') {
-    if (gameHistory.length === 0) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '📭 Belum ada riwayat permainan saat ini.',
-      });
-    }
-
-    const latest = gameHistory[gameHistory.length - 1];
-    const players = latest.players
+    if (userId !== currentTurn)
