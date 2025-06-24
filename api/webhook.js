@@ -14,7 +14,7 @@ const gameHistory = [];
 let resetTimer = null;
 
 // 🚨 Ganti ini dengan LINE userId kamu
-const adminId = 'Uxxxxxxxxxxxxxxxxxxxxxxxxxx'; 
+const adminId = 'pavinendra'; 
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
