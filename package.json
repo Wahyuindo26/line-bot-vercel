@@ -1,0 +1,7 @@
+{
+  "name": "line-bot-vercel",
+  "version": "1.0.0",
+  "dependencies": {
+    "@line/bot-sdk": "^7.5.0"
+  }
+}
