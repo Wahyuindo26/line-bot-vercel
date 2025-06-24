@@ -408,4 +408,18 @@ async function handleEvent(event) {
  catch (err) {
     console.error('[ERROR in handleEvent]', err);
  }
+
+  if (playerQueue.length === 2 && globalThis.currentDeck && !currentTurn) {
+  currentTurn = playerQueue[0];
+  await client.pushMessage(currentTurn, {
+    type: 'text',
+    text: '🎯 Giliranmu sekarang! Ketik "hit" atau "stand".'
+  });
+
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: '🕹️ Permainan aktif! Giliran pertama dimulai.',
+  });
+}
+
 } // 🔚 Tutup fungsi handleEvent
