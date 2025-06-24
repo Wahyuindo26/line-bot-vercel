@@ -22,14 +22,72 @@ const gameHistory = [];
 let currentTurn = null;
 let resetTimer = null;
 
-const fullDeck = [...]; // (sama seperti sebelumnya, biar hemat ruang)
+// TODO: Isi sesuai deck kamu
+const fullDeck = [
+  '🂡', '🂢', '🂣', '🂤', '🂥', '🂦', '🂧', '🂨', '🂩', '🂪', '🂫', '🂭', '🂮',
+  '🃁', '🃂', '🃃', '🃄', '🃅', '🃆', '🃇', '🃈', '🃉', '🃊', '🃋', '🃍', '🃎',
+  '🃑', '🃒', '🃓', '🃔', '🃕', '🃖', '🃗', '🃘', '🃙', '🃚', '🃛', '🃝', '🃞',
+  '🂱', '🂲', '🂳', '🂴', '🂵', '🂶', '🂷', '🂸', '🂹', '🂺', '🂻', '🂽', '🂾'
+];
 
 function hitungNilai(cards) {
-  // ... (fungsi tetap sama)
+  let total = 0;
+  let aceCount = 0;
+  for (const card of cards) {
+    if (card.startsWith('🂡') || card.startsWith('🃁') || card.startsWith('🃑') || card.startsWith('🂱')) {
+      total += 11;
+      aceCount++;
+    } else if (/[🂢-🂾🃂-🃞🂲-🂾]/.test(card)) {
+      total += 10;
+    } else {
+      total += parseInt(card.slice(1), 10);
+    }
+  }
+  while (total > 21 && aceCount > 0) {
+    total -= 10;
+    aceCount--;
+  }
+  return total;
 }
 
 function buatFlexHasil(p1, p2, nama1, nama2) {
-  // ... (fungsi tetap sama)
+  const hasil = {
+    type: 'flex',
+    altText: 'Hasil Permainan',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [{
+          type: 'text',
+          text: '🎉 Hasil Permainan',
+          weight: 'bold',
+          size: 'xl'
+        }]
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: `${nama1} vs ${nama2}`,
+            wrap: true,
+            weight: 'bold',
+            size: 'md'
+          },
+          {
+            type: 'text',
+            text: 'Pemenang: TBD',
+            wrap: true,
+            size: 'sm'
+          }
+        ]
+      }
+    }
+  };
+  return hasil;
 }
 
 // ✅ Tambahkan fungsi aman ini:
