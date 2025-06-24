@@ -322,6 +322,23 @@ if (msg === 'reset-riwayat') {
     text: '✅ Riwayat telah direset oleh admin.'
   });
 }
+if (msg === '.htp') {
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text:
+      '♠️ Cara Bermain CHL Blackjack\n\n' +
+      '📌 Tujuan: capai total kartu sedekat mungkin ke 21 tanpa lebih!\n\n' +
+      '🃏 Perintah:\n' +
+      '- mulai → buka meja baru\n' +
+      '- gabung → masuk ke permainan (maks. 2 pemain)\n' +
+      '- hit → ambil kartu saat giliranmu\n' +
+      '- stand → selesaikan giliranmu\n' +
+      '- batal → keluar dari permainan\n' +
+      '- riwayat → lihat permainan terakhir\n' +
+      '- .htp → tampilkan panduan ini\n\n' +
+      '💥 > 21 poin = bust = kalah otomatis\n🎯 Tunggu giliranmu dan main cerdas. Good luck!'
+  });
+}
 
 // === DEFAULT ===
 return client.replyMessage(event.replyToken, {
