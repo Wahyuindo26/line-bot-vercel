@@ -38,3 +38,27 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+// 💬 Di sini kamu bisa tambah logika command seperti 'mulai'
+async function handleEvent(event) {
+  if (event.type !== 'message' || event.message.type !== 'text') return;
+
+  const msg = event.message.text.trim().toLowerCase();
+
+  if (msg === 'mulai') {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text:
+        '🎉 Selamat datang di meja Blackjack LINE!\n' +
+        'Di sini, keberuntungan dan strategi diuji.\n\n' +
+        '🃏 Ketik "gabung" untuk ikut bermain\n' +
+        '🔄 Ketik "batal" untuk keluar dari meja\n\n' +
+        'Selamat bersenang-senang — giliranmu akan tiba!',
+    });
+  }
+
+  // Default echo
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: `Kamu bilang: "${event.message.text}"`,
+  });
+}
