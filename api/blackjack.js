@@ -119,6 +119,8 @@ async function ajakTambahTeman(userId) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
+  console.log('[DEBUG] Webhook triggered:', JSON.stringify(req.body));
+
   const events = req.body?.events;
   if (!Array.isArray(events)) {
     return res.status(400).json({ error: 'Invalid format' });
@@ -133,7 +135,7 @@ export default async function handler(req, res) {
   }
 }
 
-console.log('[DEBUG] Webhook triggered:', JSON.stringify(req.body));
+
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
 
