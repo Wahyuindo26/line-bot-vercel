@@ -35,6 +35,13 @@ async function handleEvent(event) {
   const userId = event.source.userId;
 
   if (msg === 'mulai') {
+    if (playerQueue.length > 0) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'Permainan sedang berlangsung atau pemain sudah bergabung. Tunggu ronde berikutnya ya! 🎲',
+      });
+    }
+
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text:
@@ -54,6 +61,13 @@ async function handleEvent(event) {
       });
     }
 
+    if (playerQueue.length >= 2) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'Maaf, meja penuh. Tunggu ronde berikutnya 🙏',
+      });
+    }
+
     playerQueue.push(userId);
 
     if (playerQueue.length < 2) {
@@ -63,27 +77,22 @@ async function handleEvent(event) {
       });
     }
 
-    if (playerQueue.length === 2) {
-      const startMessage = {
-        type: 'text',
-        text: '🎮 Permainan dimulai! Siapkan strategi dan keberuntunganmu.',
-      };
-
-      await Promise.all(
-        playerQueue.map(uid => client.pushMessage(uid, startMessage))
-      );
-
-      return;
-    }
-
-    return client.replyMessage(event.replyToken, {
+    const startMessage = {
       type: 'text',
-      text: 'Maaf, meja penuh. Tunggu ronde berikutnya 🙏',
-    });
+      text: '🎮 Permainan dimulai! Siapkan strategi dan keberuntunganmu.',
+    };
+
+    await Promise.all(
+      playerQueue.map(uid => client.pushMessage(uid, startMessage))
+    );
+
+    // 🔜 Logika permainan lanjut bisa ditambahkan di sini
+
+    return;
   }
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: 'Perintah tidak dikenal. Ketik "mulai" untuk mulai 🎉',
+    text: 'Perintah tidak dikenal. Ketik "mulai" untuk mulai permainan 🎉',
   });
 }
