@@ -9,7 +9,6 @@ export const config = {
   api: { bodyParser: true },
 };
 
-// 🧠 Variabel penyimpanan sementara pemain
 const playerQueue = [];
 
 export default async function handler(req, res) {
@@ -29,29 +28,24 @@ export default async function handler(req, res) {
   }
 }
 
-// 🎮 Handler pesan masuk
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
 
   const msg = event.message.text.trim().toLowerCase();
   const userId = event.source.userId;
 
-  // ✅ Command 'mulai' (sambutan)
   if (msg === 'mulai') {
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: 
-        '🎉 Welcome to CHL Blackjack Table 🎴\n'+
-        'Let's Party and Game On\n'+
-
-        '🃏 Ketik gabung untuk ikut bermain\n'+
-        '🔄 Ketik batal untuk keluar dari meja\n'+
-
-        'May luck be on your side tonight. ♠️',
+      text:
+        '🎉 Welcome to CHL Blackjack Table\n' +
+        "Let's Party and Game On\n\n" +
+        '🃏 Ketik gabung untuk ikut bermain\n' +
+        '🔄 Ketik batal untuk keluar dari meja\n\n' +
+        'May luck be on your side tonight. ♠',
     });
   }
 
-  // 🃏 Command 'gabung'
   if (msg === 'gabung') {
     if (playerQueue.includes(userId)) {
       return client.replyMessage(event.replyToken, {
@@ -79,21 +73,17 @@ async function handleEvent(event) {
         playerQueue.map(uid => client.pushMessage(uid, startMessage))
       );
 
-      // 💡 Lanjut ke pembagian kartu nanti di sini
-
       return;
     }
 
-    // Lebih dari 2 pemain
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: 'Maaf, meja penuh. Tunggu ronde berikutnya 🙏',
     });
   }
 
-  // ✉️ Default (pesan yang tidak dikenali)
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: 'Perintah tidak dikenal. Ketik "mulai" untuk melihat opsi.',
+    text: 'Perintah tidak dikenal. Ketik "mulai" untuk mulai 🎉',
   });
 }
