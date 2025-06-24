@@ -11,7 +11,7 @@ export const config = {
 
 // 🔒 Admin ID
 const admins = {
-  pavinendra: 'Uabc123pavin456xyz', // Ganti dengan ID asli Pavinendra
+  pavinendra: 'pavinendra', // Ganti dengan ID asli Pavinendra
 };
 
 // 🧠 Game State
@@ -48,6 +48,37 @@ function hitungNilai(cards) {
 
   return total;
 }
+
+await client.pushMessage(userId, {
+  type: 'flex',
+  altText: 'Tambahkan Bot Dulu',
+  contents: {
+    type: 'bubble',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [{ type: 'text', text: '👋 Tambahkan Bot Ini Dulu', weight: 'bold', size: 'xl' }]
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'md',
+      contents: [
+        { type: 'text', text: 'Agar kamu bisa menerima kartu secara privat, tambahkan bot ini ke daftar teman kamu di LINE.', wrap: true },
+        {
+          type: 'button',
+          action: {
+            type: 'uri',
+            label: 'Tambah Sekarang',
+            uri: 'https://line.me/R/ti/p/@your_bot_id' // Ganti dengan ID bot kamu
+          },
+          style: 'primary',
+          color: '#00B900'
+        }
+      ]
+    }
+  }
+});
 
 // 🧾 Flex Message: Tampilkan hasil akhir
 function buatFlexHasil(p1, p2, nama1, nama2) {
