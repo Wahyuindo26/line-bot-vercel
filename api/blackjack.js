@@ -384,7 +384,7 @@ async function handleEvent(event) {
   
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: '🎴 Kartu telah diberikan. Kamu bisa "hit" lagi atau "stand".'
+        text: '🎴 Kartu telah diberikan. Kamu bisa "/hit" lagi atau "/stand".'
       });
     }
   
@@ -431,7 +431,7 @@ async function handleEvent(event) {
       currentTurn = lawan;
       await client.pushMessage(lawan, {
         type: 'text',
-        text: '🎯 Giliranmu sekarang! Ketik "hit" atau "stand".'
+        text: '🎯 Giliranmu sekarang! Ketik "/hit" atau "/stand".'
       });
   
       return client.replyMessage(event.replyToken, {
@@ -483,14 +483,14 @@ async function mulaiGiliranPertama(groupId) {
       if (groupId) {
         await client.pushMessage(groupId, {
           type: 'text',
-          text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "hit" atau "stand".`
+          text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "/hit" atau "/stand".`
         });
       } else {
         // fallback jika bukan dari grup
         await Promise.all(playerQueue.map(uid =>
           client.pushMessage(uid, {
             type: 'text',
-            text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "hit" atau "stand".`
+            text: `🎯 Giliran ${profile.displayName} sekarang! Ketik "/hit" atau "/stand".`
           })
         ));
       }
