@@ -21,7 +21,6 @@ let currentTurn = null;
 let resetTimer = null;
 let turnTimeout = null;
 
-
 const suits = ['♠️', '♥️', '♣️', '♦️'];
 const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const fullDeck = [];
@@ -384,6 +383,7 @@ async function handleEvent(event) {
   
         playerQueue.length = 0;
         currentTurn = null;
+        globalThis.currentDeck = null;
         resetTimer = null;
         Object.keys(playerCards).forEach(k => delete playerCards[k]);
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
@@ -433,6 +433,7 @@ async function handleEvent(event) {
   
         playerQueue.length = 0;
         currentTurn = null;
+        globalThis.currentDeck = null;
         resetTimer = null;
         Object.keys(playerCards).forEach(k => delete playerCards[k]);
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
@@ -447,6 +448,7 @@ async function handleEvent(event) {
       });
 
       aturTimeoutGiliran(groupId, currentTurn);
+      globalThis.currentDeck = null;
 
   
       return client.replyMessage(event.replyToken, {
@@ -515,6 +517,13 @@ async function mulaiGiliranPertama(groupId) {
           mainkanGiliranBot();
         }, 1500);
       }
+    
+      console.log('[DEBUG] Coba mulai giliran pertama', {
+        deck: !!globalThis.currentDeck,
+        turn: currentTurn,
+        queue: playerQueue.length
+      });
+      
       
   }
   
@@ -569,6 +578,7 @@ async function mulaiGiliranPertama(groupId) {
       resetTimer = null;
       clearTimeout(turnTimeout);
       turnTimeout = null;
+      globalThis.currentDeck = null;
       Object.keys(playerCards).forEach(k => delete playerCards[k]);
       Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
     }, 5 * 60 * 1000); // 5 menit
