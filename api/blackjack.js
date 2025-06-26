@@ -205,11 +205,13 @@ async function handleEvent(event) {
     }
     if (msg === '/gabung') {
       if (playerQueue.includes(userId)) {
-        return client.replyMessage(event.replyToken, { type: 'text', text: 'Kamu sudah bergabung!' });
+        return client.replyMessage(event.replyToken, 
+            { type: 'text', text: 'Kamu sudah bergabung!' });
       }
   
       if (playerQueue.length >= 2) {
-        return client.replyMessage(event.replyToken, { type: 'text', text: 'Meja penuh. Tunggu ronde berikutnya 🙏' });
+        return client.replyMessage(event.replyToken, 
+            { type: 'text', text: 'Meja penuh. Tunggu ronde berikutnya 🙏' });
       }
   
       playerQueue.push(userId);
@@ -217,7 +219,8 @@ async function handleEvent(event) {
       playerStatus[userId] = 'playing';
   
       if (playerQueue.length === 1) {
-        return client.replyMessage(event.replyToken, { type: 'text', text: '🃏 Kamu pemain pertama. Tunggu 1 lagi.' });
+        return client.replyMessage(event.replyToken, 
+            { type: 'text', text: '🃏 Kamu pemain pertama. Tunggu 1 lagi.' });
       }
   
       const [p1, p2] = playerQueue;
@@ -252,13 +255,6 @@ async function handleEvent(event) {
   
       return;
 
-      // Antisipasi sisa status game yang menggantung
-    if (globalThis.currentDeck || currentTurn) {
-        globalThis.currentDeck = null;
-        currentTurn = null;
-        console.log('[RESET] semua variabel dibersihkan');
-
-    }
   
     }
     
@@ -278,9 +274,6 @@ async function handleEvent(event) {
           type: 'text',
           text: '🤖 Bot telah masuk ke meja sebagai lawanmu!'
         });
-        if (playerQueue.length === 2) {
-            await mulaiGiliranPertama(groupId);
-          }
           
         // Antisipasi sisa status game yang menggantung
         if (globalThis.currentDeck || currentTurn) {
@@ -378,6 +371,16 @@ async function handleEvent(event) {
           text: '❌ Deck habis atau belum dikocok. Permainan tidak bisa lanjut.'
         });
       }
+
+        const semuaSudahSelesai = playerQueue.every(pid => ['stand', 'bust'].includes(playerStatus[pid]));
+
+        if (semuaSudahSelesai) {
+        return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: 'Permainan telah selesai'
+        });
+        }
+
       
       const card = ambilKartu();
         if (!card) {
@@ -388,6 +391,7 @@ async function handleEvent(event) {
     }
 
        // fallback jika deck kosong
+      console.log('[HIT] Status pemain:', playerStatus[userId]);
       playerCards[userId].push(card);
       const total = hitungNilai(playerCards[userId]);
       const kartu = playerCards[userId].join(' ');
@@ -424,11 +428,15 @@ async function handleEvent(event) {
         Object.keys(playerCards).forEach(k => delete playerCards[k]);
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
       }
-  
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '🎴 Kartu telah diberikan. Kamu bisa "/hit" lagi atau "/stand".'
-      });
+
+      else {
+        // Hanya kirim ini jika pemain belum bust
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '🎴 Kartu telah diberikan. Kamu bisa "/hit" lagi atau "/stand".'
+        });
+      }
+      
     }
   
     if (msg === '/stand') {
@@ -476,18 +484,15 @@ async function handleEvent(event) {
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
   
         return;
+      } else {
+        // hanya giliran pindah → JANGAN reset!
+        currentTurn = lawan;
+        await client.pushMessage(lawan, { 
+            type: 'text', 
+            text: '🎯 Giliranmu sekarang! Ketik "/hit" atau "/stand".' 
+        });
+        aturTimeoutGiliran(groupId, currentTurn);
       }
-  
-      currentTurn = lawan;
-      await client.pushMessage(lawan, {
-        type: 'text',
-        text: '🎯 Giliranmu sekarang! Ketik "/hit" atau "/stand".'
-      });
-
-      aturTimeoutGiliran(groupId, currentTurn);
-      globalThis.currentDeck = null;
-      console.log('[RESET] semua variabel dibersihkan');
-
 
   
       return client.replyMessage(event.replyToken, {
@@ -553,7 +558,7 @@ async function mulaiGiliranPertama(groupId) {
     }
     if (currentTurn === botLawanId) {
         setTimeout(() => {
-          mainkanGiliranBot();
+          mainkanGiliranBot(groupId);
         }, 1500);
       }
     
@@ -566,7 +571,7 @@ async function mulaiGiliranPertama(groupId) {
       
   }
   
-  async function mainkanGiliranBot() {
+  async function mainkanGiliranBot(groupId) {
     const total = hitungNilai(playerCards[botLawanId]);
   
     if (total < 17) {
@@ -589,6 +594,7 @@ async function mulaiGiliranPertama(groupId) {
   
     // Pindahkan giliran ke pemain manusia
     currentTurn = playerQueue.find(p => p !== botLawanId);
+    playerStatus[currentTurn] = 'playing'; // ⬅️ wajib!
     await client.pushMessage(currentTurn, {
       type: 'text',
       text: '🎯 Giliranmu sekarang!'
@@ -644,6 +650,7 @@ async function mulaiGiliranPertama(groupId) {
     turnTimeout = null;
     globalThis.currentDeck = null;
     console.log('[RESET] semua variabel dibersihkan');
+    console.log('[TURN] Giliran berpindah ke:', currentTurn);
     Object.keys(playerCards).forEach(k => delete playerCards[k]);
     Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
   }
