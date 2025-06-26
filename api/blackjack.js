@@ -10,9 +10,9 @@ export const config = {
 };
 
 const admins = {
-    pavinendra: 'pavinendra' // Ganti ini dengan ID asli kamu
+    pavinendra: 'Ud5a0a393d90b60e1ed170f31422ff11d' // Ganti ini dengan ID asli kamu
   };
-  
+const botLawanId = 'bot-lawan';
 const playerQueue = [];
 const playerCards = {};
 const playerStatus = {};
@@ -150,6 +150,11 @@ async function handleEvent(event) {
 
     console.log('[ADMIN DEBUG] userId:', userId);
     console.log(`[MSG] ${userId}: ${msg}`);
+
+    if (userId === admins.pavinendra && msg === '/vsbot') {
+        // jalankan logika pemain vs bot di atas
+      }
+      
   
     if (msg === '/mulai') {
       if (playerQueue.length > 0) {
@@ -216,7 +221,49 @@ async function handleEvent(event) {
   
       return;
     }
-  
+    
+    if (msg === '/vsbot') {
+        if (playerQueue.length !== 1) {
+          return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: 'Untuk main vs bot, kamu harus jadi satu-satunya pemain di meja.'
+          });
+        }
+      
+        playerQueue.push(botLawanId);
+        playerCards[botLawanId] = [];
+        playerStatus[botLawanId] = 'playing';
+      
+        await client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '🤖 Bot telah masuk ke meja sebagai lawanmu!'
+        });
+
+        if (currentTurn === botLawanId) {
+            // Bot hit selama nilai < 17
+            const total = hitungNilai(playerCards[botLawanId]);
+            if (total < 17) {
+              const card = globalThis.currentDeck?.shift();
+              playerCards[botLawanId].push(card);
+              const newTotal = hitungNilai(playerCards[botLawanId]);
+              console.log(`[BOT] Bot hit dapat ${card}, total ${newTotal}`);
+          
+              if (newTotal > 21) {
+                playerStatus[botLawanId] = 'bust';
+              }
+          
+              // Lanjut giliran pemain manusia
+              currentTurn = playerQueue.find(p => p !== botLawanId);
+              await client.pushMessage(currentTurn, { type: 'text', text: '🎯 Giliranmu sekarang!' });
+            } else {
+              playerStatus[botLawanId] = 'stand';
+              currentTurn = playerQueue.find(p => p !== botLawanId);
+              await client.pushMessage(currentTurn, { type: 'text', text: '🎯 Giliranmu sekarang!' });
+            }
+          }
+          
+      }
+      
   
     if (msg === '/batal') {
       const index = playerQueue.indexOf(userId);
@@ -348,6 +395,12 @@ async function handleEvent(event) {
           text: '⏳ Bukan giliranmu.'
         });
       }
+      if (currentTurn === botLawanId) {
+        setTimeout(() => {
+          mainkanGiliranBot();
+        }, 1500); // Delay 1.5 detik biar lebih realistis
+      }
+      
   
       playerStatus[userId] = 'stand';
   
@@ -442,4 +495,30 @@ async function mulaiGiliranPertama(groupId) {
       }
     }
   }
+  
+  async function mainkanGiliranBot() {
+    const total = hitungNilai(playerCards[botLawanId]);
+  
+    if (total < 17) {
+      const card = globalThis.currentDeck?.shift();
+      playerCards[botLawanId].push(card);
+      const newTotal = hitungNilai(playerCards[botLawanId]);
+  
+      console.log(`[BOT] Bot hit: ${card}, total: ${newTotal}`);
+  
+      if (newTotal > 21) {
+        playerStatus[botLawanId] = 'bust';
+      }
+    } else {
+      playerStatus[botLawanId] = 'stand';
+    }
+  
+    // Pindahkan giliran ke pemain manusia
+    currentTurn = playerQueue.find(p => p !== botLawanId);
+    await client.pushMessage(currentTurn, {
+      type: 'text',
+      text: '🎯 Giliranmu sekarang!'
+    });
+  }
+  
   
