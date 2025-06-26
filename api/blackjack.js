@@ -251,6 +251,15 @@ async function handleEvent(event) {
       }
   
       return;
+
+      // Antisipasi sisa status game yang menggantung
+    if (globalThis.currentDeck || currentTurn) {
+        globalThis.currentDeck = null;
+        currentTurn = null;
+        console.log('[RESET] semua variabel dibersihkan');
+
+    }
+  
     }
     
     if (msg === '/vsbot') {
@@ -273,7 +282,14 @@ async function handleEvent(event) {
             await mulaiGiliranPertama(groupId);
           }
           
-          
+        // Antisipasi sisa status game yang menggantung
+        if (globalThis.currentDeck || currentTurn) {
+            globalThis.currentDeck = null;
+            currentTurn = null;
+            console.log('[RESET] semua variabel dibersihkan');
+
+  }
+  
       }
       
   
@@ -403,6 +419,7 @@ async function handleEvent(event) {
         playerQueue.length = 0;
         currentTurn = null;
         globalThis.currentDeck = null;
+        console.log('[RESET] semua variabel dibersihkan');
         resetTimer = null;
         Object.keys(playerCards).forEach(k => delete playerCards[k]);
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
@@ -453,6 +470,7 @@ async function handleEvent(event) {
         playerQueue.length = 0;
         currentTurn = null;
         globalThis.currentDeck = null;
+        console.log('[RESET] semua variabel dibersihkan');
         resetTimer = null;
         Object.keys(playerCards).forEach(k => delete playerCards[k]);
         Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
@@ -468,6 +486,8 @@ async function handleEvent(event) {
 
       aturTimeoutGiliran(groupId, currentTurn);
       globalThis.currentDeck = null;
+      console.log('[RESET] semua variabel dibersihkan');
+
 
   
       return client.replyMessage(event.replyToken, {
@@ -597,11 +617,12 @@ async function mulaiGiliranPertama(groupId) {
   
       // Reset semua
       playerQueue.length = 0;
+      globalThis.currentDeck = null;
       currentTurn = null;
+      console.log('[RESET] semua variabel dibersihkan');
       resetTimer = null;
       clearTimeout(turnTimeout);
       turnTimeout = null;
-      globalThis.currentDeck = null;
       Object.keys(playerCards).forEach(k => delete playerCards[k]);
       Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
     }, 5 * 60 * 1000); // 5 menit
@@ -615,4 +636,15 @@ async function mulaiGiliranPertama(groupId) {
     return globalThis.currentDeck.shift();
   }
   
+  function resetGameState() {
+    playerQueue.length = 0;
+    currentTurn = null;
+    resetTimer = null;
+    clearTimeout(turnTimeout);
+    turnTimeout = null;
+    globalThis.currentDeck = null;
+    console.log('[RESET] semua variabel dibersihkan');
+    Object.keys(playerCards).forEach(k => delete playerCards[k]);
+    Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
+  }
   
