@@ -372,10 +372,15 @@ async function handleEvent(event) {
         const profile2 = await client.getProfile(p2);
         const hasilFlex = buatFlexHasil(p1, p2, profile1.displayName, profile2.displayName);
   
-        await Promise.all([
-          client.pushMessage(p1, hasilFlex),
-          client.pushMessage(p2, hasilFlex),
-        ]);         
+        if (groupId) {
+            await client.pushMessage(groupId, hasilFlex);
+          } else {
+            await Promise.all([
+              client.pushMessage(p1, hasilFlex),
+              client.pushMessage(p2, hasilFlex),
+            ]);
+          }
+                  
   
         playerQueue.length = 0;
         currentTurn = null;
@@ -416,10 +421,15 @@ async function handleEvent(event) {
         const profile2 = await client.getProfile(p2);
         const hasilFlex = buatFlexHasil(p1, p2, profile1.displayName, profile2.displayName);
   
-        await Promise.all([
-          client.pushMessage(p1, hasilFlex),
-          client.pushMessage(p2, hasilFlex),
-        ]);
+        if (groupId) {
+            await client.pushMessage(groupId, hasilFlex);
+          } else {
+            await Promise.all([
+              client.pushMessage(p1, hasilFlex),
+              client.pushMessage(p2, hasilFlex),
+            ]);
+          }
+          
   
         playerQueue.length = 0;
         currentTurn = null;
