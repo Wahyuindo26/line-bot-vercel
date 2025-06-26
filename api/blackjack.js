@@ -287,13 +287,11 @@ async function handleEvent(event) {
           
         // Antisipasi sisa status game yang menggantung
         if (globalThis.currentDeck || currentTurn) {
-            globalThis.currentDeck = null;
-            currentTurn = null;
-            console.log('[RESET] semua variabel dibersihkan');
-            await mulaiGiliranPertama(groupId);
-
-
-  }
+            resetGameState();
+          }
+          await mulaiGiliranPertama(groupId); // ⬅️ pindah ke luar blok
+          
+          
   
       }
       
@@ -540,6 +538,11 @@ async function handleEvent(event) {
 } // 🔚 Tutup fungsi handleEvent
 
 async function mulaiGiliranPertama(groupId) {
+
+    if (globalThis.currentDeck || currentTurn) {
+        console.warn('[WARN] Auto-reset karena kondisi tak bersih');
+        resetGameState();
+      }
     if (playerQueue.length === 2 && !globalThis.currentDeck && !currentTurn) {
       globalThis.currentDeck = shuffleDeck(fullDeck);
       currentTurn = playerQueue[0];
@@ -561,6 +564,11 @@ async function mulaiGiliranPertama(groupId) {
         ));
       }
     }
+    if (!globalThis.currentDeck || !playerQueue.includes(botLawanId)) {
+        console.warn('[BOT] Tidak bisa mulai giliran bot: state belum lengkap');
+        return;
+      }
+      
     if (currentTurn === botLawanId) {
         setTimeout(() => {
           mainkanGiliranBot(groupId);
@@ -587,10 +595,7 @@ async function mulaiGiliranPertama(groupId) {
       if (!groupId) {
         console.warn('[WARN] groupId undefined saat mulai giliran pertama');
       }
-      if (globalThis.currentDeck || currentTurn) {
-        console.warn('[WARN] Auto-reset karena kondisi tak bersih');
-        resetGameState();
-      }
+      
       
       
       
@@ -598,7 +603,7 @@ async function mulaiGiliranPertama(groupId) {
   
   async function mainkanGiliranBot(groupId) {
     const total = hitungNilai(playerCards[botLawanId]);
-  
+
     if (total < 17) {
       const card = ambilKartu();
       if (!card) {
@@ -616,6 +621,36 @@ async function mulaiGiliranPertama(groupId) {
     } else {
       playerStatus[botLawanId] = 'stand';
     }
+
+    if (!groupId) {
+        console.warn('[BOT] Bot tidak bisa set timeout: groupId null');
+        return;
+      }
+      aturTimeoutGiliran(groupId, currentTurn);
+      const playerId = playerQueue.find(p => p !== botLawanId);
+      playerStatus[playerId] = playerStatus[playerId] || 'playing';
+
+if (['stand', 'bust'].includes(playerStatus[playerId]) &&
+    ['stand', 'bust'].includes(playerStatus[botLawanId])) {
+  
+  const profile1 = await client.getProfile(playerId);
+  const profile2 = await client.getProfile(botLawanId);
+  const hasilFlex = buatFlexHasil(playerId, botLawanId, profile1.displayName, 'Bot');
+
+  if (groupId) {
+    await client.pushMessage(groupId, hasilFlex);
+  } else {
+    await Promise.all([
+      client.pushMessage(playerId, hasilFlex)
+    ]);
+  }
+
+  await client.pushMessage(playerId, { type: 'text', text: '🎮 Ronde selesai. /gabung untuk main lagi.' });
+  resetGameState();
+  console.log('[RESET] Game selesai setelah giliran bot');
+  return;
+}
+
   
     // Pindahkan giliran ke pemain manusia
     currentTurn = playerQueue.find(p => p !== botLawanId);
@@ -683,5 +718,7 @@ async function mulaiGiliranPertama(groupId) {
         p1: playerStatus[playerQueue[0]],
         p2: playerStatus[playerQueue[1]]
     }); 
-}
+          
+
+  }
   
