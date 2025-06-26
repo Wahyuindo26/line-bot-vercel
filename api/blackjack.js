@@ -9,7 +9,10 @@ export const config = {
   api: { bodyParser: true },
 };
 
-const admins = { pavinendra: 'pavinendra' };
+const admins = {
+    pavinendra: 'pavinendra' // Ganti ini dengan ID asli kamu
+  };
+  
 const playerQueue = [];
 const playerCards = {};
 const playerStatus = {};
@@ -145,7 +148,7 @@ async function handleEvent(event) {
     const userId = event.source.userId;
     const groupId = event.source.type === 'group' ? event.source.groupId : null;
 
-  
+    console.log('[ADMIN DEBUG] userId:', userId);
     console.log(`[MSG] ${userId}: ${msg}`);
   
     if (msg === '/mulai') {
@@ -161,9 +164,9 @@ async function handleEvent(event) {
         text:
           '♠ CHL Blackjack Table ♠\n' +
           "Let's Party and Game On\n\n" +
-          '💡 .htp : cara bermain\n' +
-          '🃏 gabung : ikut bermain\n' +
-          '🔄 batal : keluar dari meja\n\n' +
+          '💡 /htp : cara bermain\n' +
+          '🃏 /gabung : ikut bermain\n' +
+          '🔄 /batal : keluar dari meja\n\n' +
           'add bot untuk bermain',
       });
     }
@@ -382,7 +385,14 @@ async function handleEvent(event) {
       });
       
     }
-  
+    
+    if (msg === '/admin-id') {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: `🆔 ID kamu: ${userId}`
+        });
+      }
+      
 
     //if (!msg.startsWith('/')) {
         //return client.replyMessage(event.replyToken, {
@@ -432,6 +442,4 @@ async function mulaiGiliranPertama(groupId) {
       }
     }
   }
-  
-  
   
