@@ -148,7 +148,7 @@ async function handleEvent(event) {
   
     console.log(`[MSG] ${userId}: ${msg}`);
   
-    if (msg === 'mulai') {
+    if (msg === '/mulai') {
       if (playerQueue.length > 0) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -159,15 +159,15 @@ async function handleEvent(event) {
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text:
-          '🎉 Welcome to CHL Blackjack Table\n' +
+          '♠ CHL Blackjack Table ♠\n' +
           "Let's Party and Game On\n\n" +
-          'ⓘ Ketik .htp untuk cara bermain\n' +
-          '🃏 Ketik gabung untuk ikut bermain\n' +
-          '🔄 Ketik batal untuk keluar dari meja\n\n' +
-          'May luck be on your side tonight. ♠',
+          '💡 .htp : cara bermain\n' +
+          '🃏 gabung : ikut bermain\n' +
+          '🔄 batal : keluar dari meja\n\n' +
+          'add bot untuk bermain',
       });
     }
-    if (msg === 'gabung') {
+    if (msg === '/gabung') {
       if (playerQueue.includes(userId)) {
         return client.replyMessage(event.replyToken, { type: 'text', text: 'Kamu sudah bergabung!' });
       }
@@ -215,7 +215,7 @@ async function handleEvent(event) {
     }
   
   
-    if (msg === 'batal') {
+    if (msg === '/batal') {
       const index = playerQueue.indexOf(userId);
       if (index !== -1) {
         playerQueue.splice(index, 1);
@@ -229,25 +229,25 @@ async function handleEvent(event) {
       });
     }
   
-    if (msg === '.htp') {
+    if (msg === '/htp') {
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text:
           '♠️ Cara Bermain CHL Blackjack\n\n' +
           '📌 Tujuan: capai total kartu sedekat mungkin ke 21 tanpa lebih!\n\n' +
           '🃏 Perintah:\n' +
-          '- mulai → buka meja baru\n' +
-          '- gabung → masuk ke permainan (maks. 2 pemain)\n' +
-          '- hit → ambil kartu saat giliranmu\n' +
-          '- stand → selesaikan giliranmu\n' +
-          '- batal → keluar dari permainan\n' +
-          '- riwayat → lihat permainan terakhir\n' +
-          '- .htp → tampilkan panduan ini\n\n' +
+          '- /mulai → buka meja baru\n' +
+          '- /gabung → masuk ke permainan (maks. 2 pemain)\n' +
+          '- /hit → ambil kartu saat giliranmu\n' +
+          '- /stand → selesaikan giliranmu\n' +
+          '- /batal → keluar dari permainan\n' +
+          '- /riwayat → lihat permainan terakhir\n' +
+          '- /htp → tampilkan panduan ini\n\n' +
           '💥 > 21 poin = bust = kalah otomatis\n🎯 Tunggu giliranmu dan main cerdas. Good luck!'
       });
     }
   
-    if (msg === 'riwayat') {
+    if (msg === '/riwayat') {
       if (gameHistory.length === 0) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -265,7 +265,7 @@ async function handleEvent(event) {
       });
     }
   
-    if (msg === 'reset-riwayat') {
+    if (msg === '/reset-riwayat') {
       if (userId !== admins.pavinendra) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -279,7 +279,7 @@ async function handleEvent(event) {
         text: '✅ Riwayat telah direset oleh admin.'
       });
     }
-    if (msg === 'hit') {
+    if (msg === '/hit') {
       if (!playerQueue.includes(userId)) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -331,7 +331,7 @@ async function handleEvent(event) {
       });
     }
   
-    if (msg === 'stand') {
+    if (msg === '/stand') {
       if (!playerQueue.includes(userId)) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -383,11 +383,22 @@ async function handleEvent(event) {
       
     }
   
+
+    //if (!msg.startsWith('/')) {
+        //return client.replyMessage(event.replyToken, {
+          //type: 'text',
+          //text: '🤖 Pesan ini bukan command. Gunakan perintah dengan awalan "/" seperti /gabung, /hit, dll.'
+        //});
+      //}
+      
+
     // === DEFAULT FALLBACK ===
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: 'Perintah tidak dikenal. Ketik "mulai", "gabung", "hit", atau "stand".'
-    });
+    // Jika bukan command (tidak diawali "/"), abaikan saja
+    if (!msg.startsWith('/')) return;
+
+    // Jika command tidak dikenali, diam juga (opsional)
+    return;
+
     
  }
  catch (err) {
@@ -421,4 +432,6 @@ async function mulaiGiliranPertama(groupId) {
       }
     }
   }
+  
+  
   
