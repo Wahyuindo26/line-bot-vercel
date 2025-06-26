@@ -234,13 +234,23 @@ async function handleEvent(event) {
         timestamp: new Date().toISOString(),
       });
   
-      await Promise.all([
-        client.pushMessage(p1, { type: 'text', text: '🎮 Permainan dimulai!' }),
-        client.pushMessage(p2, { type: 'text', text: '🎮 Permainan dimulai!' }),
-      ]);
+      
       if (playerQueue.length === 2) {
-        await mulaiGiliranPertama(groupId);
+        await client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '🃏 Kamu adalah pemain kedua. Permainan akan dimulai!'
+        });
+      // Paksa reset state jika terdeteksi ada game tergantung
+        if (playerQueue.length === 2 && (globalThis.currentDeck || currentTurn)) {
+            console.log('[WARN] Terdeteksi status menggantung. Reset paksa.');
+            resetGameState();
+        }
+        await mulaiGiliranPertama(groupId ?? userId); // fallback: kirim ke user
+
+  
+        return;
       }
+      
   
             
   
@@ -280,6 +290,8 @@ async function handleEvent(event) {
             globalThis.currentDeck = null;
             currentTurn = null;
             console.log('[RESET] semua variabel dibersihkan');
+            await mulaiGiliranPertama(groupId);
+
 
   }
   
@@ -351,6 +363,8 @@ async function handleEvent(event) {
       });
     }
     if (msg === '/hit') {
+    
+      if (!playerCards[userId]) playerCards[userId] = [];
       if (!playerQueue.includes(userId)) {
         return client.replyMessage(event.replyToken, {
           type: 'text',
@@ -418,15 +432,12 @@ async function handleEvent(event) {
               client.pushMessage(p2, hasilFlex),
             ]);
           }
-                  
+        await client.pushMessage(p1, { type: 'text', text: '🎮 Ronde telah selesai. /gabung untuk main lagi.' });
+        await client.pushMessage(p2, { type: 'text', text: '🎮 Ronde telah selesai. /gabung untuk main lagi.' });
+        
   
-        playerQueue.length = 0;
-        currentTurn = null;
-        globalThis.currentDeck = null;
+        resetGameState();
         console.log('[RESET] semua variabel dibersihkan');
-        resetTimer = null;
-        Object.keys(playerCards).forEach(k => delete playerCards[k]);
-        Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
       }
 
       else {
@@ -475,14 +486,8 @@ async function handleEvent(event) {
           }
           
   
-        playerQueue.length = 0;
-        currentTurn = null;
-        globalThis.currentDeck = null;
+        resetGameState();
         console.log('[RESET] semua variabel dibersihkan');
-        resetTimer = null;
-        Object.keys(playerCards).forEach(k => delete playerCards[k]);
-        Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
-  
         return;
       } else {
         // hanya giliran pindah → JANGAN reset!
@@ -562,11 +567,31 @@ async function mulaiGiliranPertama(groupId) {
         }, 1500);
       }
     
+      console.log('[DEBUG] Memulai giliran pertama', {
+        p1: playerQueue[0],
+        p2: playerQueue[1],
+        currentTurn
+      });
+      
       console.log('[DEBUG] Coba mulai giliran pertama', {
         deck: !!globalThis.currentDeck,
         turn: currentTurn,
         queue: playerQueue.length
       });
+      
+      if (resetTimer) {
+        clearTimeout(resetTimer);
+        resetTimer = null;
+        console.log('[TIMER] resetTimer dibatalkan karena game dimulai');
+      }
+      if (!groupId) {
+        console.warn('[WARN] groupId undefined saat mulai giliran pertama');
+      }
+      if (globalThis.currentDeck || currentTurn) {
+        console.warn('[WARN] Auto-reset karena kondisi tak bersih');
+        resetGameState();
+      }
+      
       
       
   }
@@ -622,15 +647,10 @@ async function mulaiGiliranPertama(groupId) {
       await client.pushMessage(groupId, hasilFlex);
   
       // Reset semua
-      playerQueue.length = 0;
-      globalThis.currentDeck = null;
-      currentTurn = null;
+      resetGameState();
       console.log('[RESET] semua variabel dibersihkan');
-      resetTimer = null;
       clearTimeout(turnTimeout);
       turnTimeout = null;
-      Object.keys(playerCards).forEach(k => delete playerCards[k]);
-      Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
     }, 5 * 60 * 1000); // 5 menit
   }
   
@@ -649,9 +669,19 @@ async function mulaiGiliranPertama(groupId) {
     clearTimeout(turnTimeout);
     turnTimeout = null;
     globalThis.currentDeck = null;
-    console.log('[RESET] semua variabel dibersihkan');
-    console.log('[TURN] Giliran berpindah ke:', currentTurn);
     Object.keys(playerCards).forEach(k => delete playerCards[k]);
     Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
-  }
+    console.log('[RESET] semua variabel dibersihkan');
+    console.log('[TURN] Giliran berpindah ke:', currentTurn);
+    console.log('[DEBUG] Game reset. playerQueue:', playerQueue, 
+        'currentTurn:', currentTurn,
+        'deck:', globalThis.currentDeck?.length ?? 'null');
+    console.log('[CHECK] State saat mulai:', {
+        deck: !!globalThis.currentDeck,
+        turn: currentTurn,
+        q: playerQueue.length,
+        p1: playerStatus[playerQueue[0]],
+        p2: playerStatus[playerQueue[1]]
+    }); 
+}
   
