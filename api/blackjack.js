@@ -151,11 +151,7 @@ async function handleEvent(event) {
     console.log('[ADMIN DEBUG] userId:', userId);
     console.log(`[MSG] ${userId}: ${msg}`);
 
-    if (userId === admins.pavinendra && msg === '/vsbot') {
-        // jalankan logika pemain vs bot di atas
-      }
-      
-  
+    
     if (msg === '/mulai') {
       if (playerQueue.length > 0) {
         return client.replyMessage(event.replyToken, {
@@ -207,6 +203,9 @@ async function handleEvent(event) {
         client.pushMessage(p1, { type: 'text', text: '🎮 Permainan dimulai!' }),
         client.pushMessage(p2, { type: 'text', text: '🎮 Permainan dimulai!' }),
       ]);
+      if (playerQueue.length === 2) {
+        await mulaiGiliranPertama(groupId);
+      }
   
             
   
@@ -238,29 +237,10 @@ async function handleEvent(event) {
           type: 'text',
           text: '🤖 Bot telah masuk ke meja sebagai lawanmu!'
         });
-
-        if (currentTurn === botLawanId) {
-            // Bot hit selama nilai < 17
-            const total = hitungNilai(playerCards[botLawanId]);
-            if (total < 17) {
-              const card = globalThis.currentDeck?.shift();
-              playerCards[botLawanId].push(card);
-              const newTotal = hitungNilai(playerCards[botLawanId]);
-              console.log(`[BOT] Bot hit dapat ${card}, total ${newTotal}`);
-          
-              if (newTotal > 21) {
-                playerStatus[botLawanId] = 'bust';
-              }
-          
-              // Lanjut giliran pemain manusia
-              currentTurn = playerQueue.find(p => p !== botLawanId);
-              await client.pushMessage(currentTurn, { type: 'text', text: '🎯 Giliranmu sekarang!' });
-            } else {
-              playerStatus[botLawanId] = 'stand';
-              currentTurn = playerQueue.find(p => p !== botLawanId);
-              await client.pushMessage(currentTurn, { type: 'text', text: '🎯 Giliranmu sekarang!' });
-            }
+        if (playerQueue.length === 2) {
+            await mulaiGiliranPertama(groupId);
           }
+          
           
       }
       
@@ -395,11 +375,6 @@ async function handleEvent(event) {
           text: '⏳ Bukan giliranmu.'
         });
       }
-      if (currentTurn === botLawanId) {
-        setTimeout(() => {
-          mainkanGiliranBot();
-        }, 1500); // Delay 1.5 detik biar lebih realistis
-      }
       
   
       playerStatus[userId] = 'stand';
@@ -467,7 +442,6 @@ async function handleEvent(event) {
  catch (err) {
     console.error('[ERROR in handleEvent]', err);
  }
- await mulaiGiliranPertama(groupId);
 
 
 } // 🔚 Tutup fungsi handleEvent
@@ -494,6 +468,12 @@ async function mulaiGiliranPertama(groupId) {
         ));
       }
     }
+    if (currentTurn === botLawanId) {
+        setTimeout(() => {
+          mainkanGiliranBot();
+        }, 1500);
+      }
+      
   }
   
   async function mainkanGiliranBot() {
