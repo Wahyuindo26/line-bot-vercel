@@ -306,7 +306,7 @@ async function handleEvent(event) {
       gameHistory.length = 0;
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: '✅ Riwayat telah direset oleh admin.'
+        text: '✅ As you wish my lord 🙇'
       });
     }
     if (msg === '/hit') {
