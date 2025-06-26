@@ -63,28 +63,55 @@ function hitungNilai(cards) {
     return total;
   }
 
-function buatFlexHasil(p1, p2, nama1, nama2) {
-  return {
-    type: 'flex',
-    altText: 'Hasil Permainan',
-    contents: {
-      type: 'bubble',
-      header: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [{ type: 'text', text: '🎉 Hasil Permainan', weight: 'bold', size: 'xl' }]
-      },
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          { type: 'text', text: `${nama1} vs ${nama2}`, wrap: true, weight: 'bold', size: 'md' },
-          { type: 'text', text: 'Pemenang: TBD', wrap: true, size: 'sm' }
-        ]
+  function buatFlexHasil(p1, p2, nama1, nama2) {
+    const cards1 = playerCards[p1] || [];
+    const cards2 = playerCards[p2] || [];
+  
+    const total1 = hitungNilai(cards1);
+    const total2 = hitungNilai(cards2);
+  
+    const isBust1 = total1 > 21;
+    const isBust2 = total2 > 21;
+  
+    let pemenang = 'Seri 🤝';
+  
+    if (isBust1 && !isBust2) {
+      pemenang = `${nama2} menang 🏆`;
+    } else if (!isBust1 && isBust2) {
+      pemenang = `${nama1} menang 🏆`;
+    } else if (!isBust1 && !isBust2) {
+      if (total1 > total2) {
+        pemenang = `${nama1} menang 🏆`;
+      } else if (total2 > total1) {
+        pemenang = `${nama2} menang 🏆`;
       }
     }
-  };
-}
+  
+    return {
+      type: 'flex',
+      altText: 'Hasil Permainan',
+      contents: {
+        type: 'bubble',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [{ type: 'text', text: '🎉 Hasil Permainan', weight: 'bold', size: 'xl' }]
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            { type: 'text', text: `${nama1} vs ${nama2}`, wrap: true, weight: 'bold', size: 'md' },
+            { type: 'text', text: `Pemenang: ${pemenang}`, wrap: true, size: 'sm' },
+            { type: 'separator', margin: 'md' },
+            { type: 'text', text: `${nama1}: ${cards1.join(' ')} (${total1})`, wrap: true, size: 'sm' },
+            { type: 'text', text: `${nama2}: ${cards2.join(' ')} (${total2})`, wrap: true, size: 'sm' }
+          ]
+        }
+      }
+    };
+  }
+  
 
 async function ajakTambahTeman(userId) {
   return client.pushMessage(userId, {
