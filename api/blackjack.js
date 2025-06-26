@@ -19,6 +19,8 @@ const playerStatus = {};
 const gameHistory = [];
 let currentTurn = null;
 let resetTimer = null;
+let turnTimeout = null;
+
 
 const suits = ['♠️', '♥️', '♣️', '♦️'];
 const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -433,6 +435,9 @@ async function handleEvent(event) {
         type: 'text',
         text: '🎯 Giliranmu sekarang! Ketik "/hit" atau "/stand".'
       });
+
+      aturTimeoutGiliran(groupId, currentTurn);
+
   
       return client.replyMessage(event.replyToken, {
         type: 'text',
@@ -526,6 +531,36 @@ async function mulaiGiliranPertama(groupId) {
       type: 'text',
       text: '🎯 Giliranmu sekarang!'
     });
+    aturTimeoutGiliran(groupId, currentTurn);
+
   }
+
+  function aturTimeoutGiliran(groupId, pemainAFK) {
+    if (turnTimeout) clearTimeout(turnTimeout);
   
+    turnTimeout = setTimeout(async () => {
+      const [p1, p2] = playerQueue;
+      const lawan = p1 === pemainAFK ? p2 : p1;
+  
+      const profileAFK = await client.getProfile(pemainAFK);
+      const profileLawan = await client.getProfile(lawan);
+  
+      await client.pushMessage(groupId, {
+        type: 'text',
+        text: `⏱️ ${profileAFK.displayName} tidak melakukan aksi selama 5 menit.\nPermainan dihentikan. ${profileLawan.displayName} dinyatakan menang otomatis 🏆`
+      });
+  
+      const hasilFlex = buatFlexHasil(p1, p2, profileAFK.displayName, profileLawan.displayName);
+      await client.pushMessage(groupId, hasilFlex);
+  
+      // Reset semua
+      playerQueue.length = 0;
+      currentTurn = null;
+      resetTimer = null;
+      clearTimeout(turnTimeout);
+      turnTimeout = null;
+      Object.keys(playerCards).forEach(k => delete playerCards[k]);
+      Object.keys(playerStatus).forEach(k => delete playerStatus[k]);
+    }, 5 * 60 * 1000); // 5 menit
+  }
   
