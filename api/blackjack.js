@@ -62,6 +62,10 @@ function hitungNilai(cards) {
     }
   
     return total;
+
+    if (!value || isNaN(total)) {
+        console.error(`[ERROR] Kartu tidak valid ditemukan: ${card}`);
+      }      
   }
 
   function buatFlexHasil(p1, p2, nama1, nama2) {
@@ -352,7 +356,22 @@ async function handleEvent(event) {
         });
       }
   
-      const card = globalThis.currentDeck?.shift() || '🃏'; // fallback jika deck kosong
+      if (!globalThis.currentDeck || globalThis.currentDeck.length === 0) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '❌ Deck habis atau belum dikocok. Permainan tidak bisa lanjut.'
+        });
+      }
+      
+      const card = ambilKartu();
+        if (!card) {
+        return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '❌ Deck kosong. Permainan tidak bisa lanjut.'
+         });
+    }
+
+       // fallback jika deck kosong
       playerCards[userId].push(card);
       const total = hitungNilai(playerCards[userId]);
       const kartu = playerCards[userId].join(' ');
@@ -531,7 +550,11 @@ async function mulaiGiliranPertama(groupId) {
     const total = hitungNilai(playerCards[botLawanId]);
   
     if (total < 17) {
-      const card = globalThis.currentDeck?.shift();
+      const card = ambilKartu();
+      if (!card) {
+        console.warn('[BOT] Deck kosong saat giliran bot.');
+        return;
+      }
       playerCards[botLawanId].push(card);
       const newTotal = hitungNilai(playerCards[botLawanId]);
   
@@ -584,5 +607,12 @@ async function mulaiGiliranPertama(groupId) {
     }, 5 * 60 * 1000); // 5 menit
   }
   
+  function ambilKartu() {
+    if (!globalThis.currentDeck || globalThis.currentDeck.length === 0) {
+      console.warn('[DECK] Deck kosong saat ambil kartu!');
+      return null;
+    }
+    return globalThis.currentDeck.shift();
+  }
   
   
