@@ -489,18 +489,12 @@ async function handleEvent(event) {
       });
     }
 
-    if (msg === '/sider') {
-      const replyContext = event.message?.replyToken && event.message?.replyTo;
-
-      if (!replyContext || !replyContext.message || !replyContext.message.id) {
-        return client.replyMessage(event.replyToken, {
-          type: 'text',
-          text: '⚠️ Gunakan perintah ini sebagai *balasan* (reply) ke pesanmu sebelumnya.'
-        });
-      }
-
-      const checkSince = Date.now() - 5 * 60 * 1000;
-
+    if (msg.startsWith('/sider')) {
+      console.log('[SIDER DEBUG] message event:', JSON.stringify(event.message, null, 2));
+      const match = msg.match(/^\/sider\s*(\d+)?m?$/);
+      const menit = match && match[1] ? parseInt(match[1], 10) : 5;
+      const checkSince = Date.now() - menit * 60 * 1000;
+    
       const sidernya = Object.entries(userActivity)
         .filter(([uid, act]) =>
           uid !== userId &&
@@ -508,15 +502,16 @@ async function handleEvent(event) {
           (!act.lastMessage || act.lastMessage < checkSince)
         )
         .map(([uid]) => `• ${uid.slice(0, 10)}...`);
-
+    
       const response = sidernya.length
-        ? `👀 Yang terlihat membaca tapi belum merespons:\n${sidernya.join('\n')}`
-        : '✅ Tidak ada “sider” terdeteksi dalam 5 menit terakhir.';
-
+        ? `👀 Dalam ${menit} menit terakhir, yang pasif:\n${sidernya.join('\n')}`
+        : `✅ Semua pengguna aktif dalam ${menit} menit terakhir.`;
+    
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text: response
       });
+
     }
 
     if (msg === '/admin-id') {
