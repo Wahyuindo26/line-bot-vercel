@@ -13,6 +13,7 @@ const admins = {
   pavinendra: 'Ud5a0a393d90b60e1ed170f31422ff11d' // Ganti ini dengan ID asli kamu
 };
 const botLawanId = 'bot-lawan';
+const userActivity = {}; // Track user seen & message timestamp
 const playerQueue = [];
 const playerCards = {};
 const playerStatus = {};
@@ -178,6 +179,17 @@ function buatFlexHasil(p1, p2, nama1, nama2) {
 
   async function handleEvent(event) {
     try {
+
+      // 🕵️ Track user activity
+      const now = Date.now();
+      userActivity[userId] = userActivity[userId] || {};
+      userActivity[userId].lastSeen = now;
+
+      if (event.type === 'message' && event.message.type === 'text') {
+        userActivity[userId].lastMessage = now;
+      }
+
+
       if (event.type !== 'message' || event.message.type !== 'text') return;
   
       const msg = event.message.text.trim().toLowerCase();
@@ -490,6 +502,37 @@ function buatFlexHasil(p1, p2, nama1, nama2) {
           text: '✅ As you wish my lord 🙇'
         });
       }
+
+      if (msg === '/sider') {
+        const replyContext = event.message?.replyToken && event.message?.replyTo;
+      
+        if (!replyContext || !replyContext.message || !replyContext.message.id) {
+          return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: '⚠️ Gunakan perintah ini sebagai *balasan* (reply) ke pesanmu sebelumnya.'
+          });
+        }
+      
+        const checkSince = Date.now() - 5 * 60 * 1000; // 5 menit ke belakang
+      
+        const sidernya = Object.entries(userActivity)
+          .filter(([uid, act]) =>
+            uid !== userId &&
+            act.lastSeen && act.lastSeen > checkSince &&
+            (!act.lastMessage || act.lastMessage < checkSince)
+          )
+          .map(([uid]) => `• ${uid.slice(0, 10)}...`);
+      
+        const response = sidernya.length
+          ? `👀 Yang terlihat membaca tapi belum merespons:\n${sidernya.join('\n')}`
+          : '✅ Tidak ada “sider” terdeteksi dalam 5 menit terakhir.';
+      
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: response
+        });
+      }
+      
   
       if (msg === '/admin-id') {
         return client.replyMessage(event.replyToken, {
