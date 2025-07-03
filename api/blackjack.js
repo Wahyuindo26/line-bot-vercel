@@ -200,56 +200,15 @@ async function handleEvent(event) {
       { text: "Satu-satunya kebijaksanaan sejati adalah menyadari bahwa kamu tidak tahu apa-apa.", author: "Socrates" }
     ];
 
-    const flexQuote = (text, author) => ({
-      type: 'flex',
-      altText: '💬 Kutipan Hari Ini',
-      contents: {
-        type: 'bubble',
-        size: 'mega',
-        body: {
-          type: 'box',
-          layout: 'vertical',
-          spacing: 'md',
-          contents: [
-            {
-              type: 'text',
-              text: '💬 Kutipan Hari Ini',
-              weight: 'bold',
-              size: 'xl',
-              color: '#1E90FF',
-              align: 'center'
-            },
-            {
-              type: 'separator',
-              margin: 'md'
-            },
-            {
-              type: 'text',
-              text: `"${text}"`,
-              wrap: true,
-              size: 'md',
-              margin: 'md',
-              color: '#555555',
-              align: 'center'
-            },
-            {
-              type: 'text',
-              text: `– ${author}`,
-              wrap: true,
-              size: 'sm',
-              align: 'center',
-              color: '#888888',
-              margin: 'sm'
-            }
-          ]
-        }
-      }
-    });
 
     if (msg === '/quotes') {
       const i = Math.floor(Math.random() * quotesTokoh.length);
       const { text, author } = quotesTokoh[i];
-      return client.replyMessage(event.replyToken, flexQuote(text, author));
+    
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `"${text}"\n– ${author}`
+      });
     }
 
     
