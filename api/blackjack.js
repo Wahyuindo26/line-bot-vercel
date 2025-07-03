@@ -187,6 +187,30 @@ async function handleEvent(event) {
     console.log('[ADMIN DEBUG] userId:', userId);
     console.log(`[MSG] ${userId}: ${msg}`);
 
+    const quotesTokoh = [
+      { text: "Jadilah perubahan yang ingin kamu lihat di dunia.", author: "Mahatma Gandhi" },
+      { text: "Imajinasi lebih penting daripada pengetahuan.", author: "Albert Einstein" },
+      { text: "Kesuksesan bukan akhir, kegagalan bukan kehancuran; yang penting adalah keberanian untuk terus melangkah.", author: "Winston Churchill" },
+      { text: "Jika kamu ingin pergi cepat, pergilah sendiri. Tapi jika kamu ingin pergi jauh, pergilah bersama.", author: "Peribahasa Afrika" },
+      { text: "Kebahagiaan tergantung pada diri kita sendiri.", author: "Aristoteles" },
+      { text: "Di tengah setiap kesulitan terdapat peluang.", author: "Albert Einstein" },
+      { text: "Katakan padaku dan aku akan lupa, ajari aku dan aku mungkin ingat, libatkan aku dan aku akan belajar.", author: "Benjamin Franklin" },
+      { text: "Jangan tenggelam dalam masa lalu, jangan bermimpi tentang masa depan, pusatkan pikiran pada saat ini.", author: "Siddharta Gautama (Buddha)" },
+      { text: "Seseorang yang tidak pernah membuat kesalahan berarti tidak pernah mencoba hal baru.", author: "Albert Einstein" },
+      { text: "Satu-satunya kebijaksanaan sejati adalah menyadari bahwa kamu tidak tahu apa-apa.", author: "Socrates" }
+    ];
+
+    if (msg === '/quotes') {
+      const i = Math.floor(Math.random() * quotesTokoh.length);
+      const { text, author } = quotesTokoh[i];
+    
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `💬 *"${text}"*\n– ${author}`
+      });
+    }
+    
+
     if (msg === '/mulai') {
       if (playerQueue.length > 0) {
         return client.replyMessage(event.replyToken, {
